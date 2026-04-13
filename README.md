@@ -60,7 +60,7 @@ Here is the transformation this project enables:
 
 **Before** — Governance is synonymous with restriction. The governance team is the group that says "no," produces 80-page compliance decks, and is invited to meetings only when something goes wrong. Engineers avoid them. Leadership tolerates them. Nobody is excited.
 
-**After** — The same team runs `python AI_Inventory_Architect.py`, selects the `security` profile, and in under 60 seconds delivers an AI-generated security posture assessment with a Mermaid diagram that a CISO can present in a board meeting. They switch to `cost`, and within a minute they have a cost optimization narrative with actionable recommendations derived from real SKU data. They switch to `architecture`, and an architecture review document materializes — complete with resource relationships and provisioning state analysis.
+**After** — The same team runs `python AI_Inventory_Architect.py`, selects the `security` profile, and in under 60 seconds (for my small scale environment as a benchmark) delivers an AI-generated security posture assessment with a Mermaid diagram that a CISO can present in a board meeting. They switch to `cost`, and within a minute they have a cost optimization narrative with actionable recommendations derived from real SKU data. They switch to `architecture`, and an architecture review document materializes — complete with resource relationships and provisioning state analysis.
 
 The deliverable is no longer the pain. **The insight is the product.**
 
