@@ -17,8 +17,8 @@ run_dir = render_sidebar()
 
 st.title("Insights")
 
-tab_exec, tab_tokens, tab_history = st.tabs(
-    ["⚙️ Execution & Resource Graph", "🔢 Token Usage", "🕐 Run History"]
+tab_exec, tab_tokens, tab_cost, tab_history = st.tabs(
+    ["⚙️ Execution & Resource Graph", "🔢 Token Usage", "💰 Cost Estimate", "🕐 Run History"]
 )
 
 # ── Execution & Resource Graph tab ────────────────────────────────────────
@@ -199,6 +199,135 @@ with tab_tokens:
             c1.metric("Total Prompt Tokens", f"{total_prompt:,}")
             c2.metric("Total Completion Tokens", f"{total_completion:,}")
             c3.metric("Total Tokens (all stages)", f"{total_all:,}")
+
+# ── Cost Estimate tab ─────────────────────────────────────────────────────
+with tab_cost:
+    st.subheader("Rate Configuration")
+    st.caption(
+        "Defaults: GPT-5-mini Global (Sweden). "
+        "Rates are per **1 million tokens**. Adjust to match your deployment."
+    )
+
+    rc1, rc2, rc3, rc4 = st.columns(4)
+    input_rate = rc1.number_input(
+        "Input ($/1M tokens)", value=0.25, min_value=0.0,
+        step=0.01, format="%.2f", key="cost_input_rate",
+    )
+    cached_rate = rc2.number_input(
+        "Cached Input ($/1M tokens)", value=0.03, min_value=0.0,
+        step=0.01, format="%.2f", key="cost_cached_rate",
+    )
+    output_rate = rc3.number_input(
+        "Output ($/1M tokens)", value=2.00, min_value=0.0,
+        step=0.01, format="%.2f", key="cost_output_rate",
+    )
+    cached_pct = rc4.slider(
+        "% Input Assumed Cached", 0, 100, 0, key="cost_cached_pct",
+        help="Azure OpenAI may cache repeated prompt prefixes. "
+             "Adjust this to model the cached portion of input tokens.",
+    )
+
+    def _compute_cost(
+        prompt_tokens: int, completion_tokens: int,
+    ) -> tuple[float, float, float]:
+        """Return (input_cost, output_cost, total) in dollars."""
+        cached_tokens = prompt_tokens * cached_pct / 100
+        uncached_tokens = prompt_tokens - cached_tokens
+        in_cost = (uncached_tokens * input_rate + cached_tokens * cached_rate) / 1_000_000
+        out_cost = completion_tokens * output_rate / 1_000_000
+        return in_cost, out_cost, in_cost + out_cost
+
+    st.divider()
+
+    # ── Current Run Cost ──────────────────────────────────────────────
+    st.subheader("Current Run Cost")
+
+    if not run_dir:
+        st.info("Run an assessment from the sidebar to get started.")
+    else:
+        cur_records = load_json(run_dir / "token_usage.json")
+        if not cur_records:
+            st.info("No token_usage.json found for this run.")
+        else:
+            stage_rows: list[dict] = []
+            for rec in cur_records:
+                in_c, out_c, tot_c = _compute_cost(
+                    rec["prompt_tokens"], rec["completion_tokens"],
+                )
+                stage_rows.append({
+                    "Stage": rec["label"],
+                    "Input Tokens": rec["prompt_tokens"],
+                    "Output Tokens": rec["completion_tokens"],
+                    "Input Cost": f"${in_c:.6f}",
+                    "Output Cost": f"${out_c:.6f}",
+                    "Subtotal": f"${tot_c:.6f}",
+                })
+
+            st.dataframe(
+                pd.DataFrame(stage_rows),
+                use_container_width=True, hide_index=True,
+            )
+
+            run_in = sum(r["prompt_tokens"] for r in cur_records)
+            run_out = sum(r["completion_tokens"] for r in cur_records)
+            r_in_c, r_out_c, r_tot = _compute_cost(run_in, run_out)
+
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Run Input Cost", f"${r_in_c:.6f}")
+            m2.metric("Run Output Cost", f"${r_out_c:.6f}")
+            m3.metric("Run Total Cost", f"${r_tot:.6f}")
+
+    # ── Cost Per Report (all runs) ────────────────────────────────────
+    st.divider()
+    st.subheader("Cost Per Report (All Runs)")
+
+    all_runs = list_runs()
+    if not all_runs:
+        st.info("No assessment runs found.")
+    else:
+        report_rows: list[dict] = []
+        grand_in = 0
+        grand_out = 0
+        for rn in all_runs:
+            rd = run_path(rn)
+            tokens = load_json(rd / "token_usage.json")
+            if not tokens:
+                report_rows.append({
+                    "Run": rn,
+                    "Profile": detect_profile(rd) or "—",
+                    "Input Tokens": 0,
+                    "Output Tokens": 0,
+                    "Cost": "—",
+                })
+                continue
+            rpt_in = sum(t["prompt_tokens"] for t in tokens)
+            rpt_out = sum(t["completion_tokens"] for t in tokens)
+            grand_in += rpt_in
+            grand_out += rpt_out
+            _, _, rpt_tot = _compute_cost(rpt_in, rpt_out)
+            report_rows.append({
+                "Run": rn,
+                "Profile": detect_profile(rd) or "—",
+                "Input Tokens": f"{rpt_in:,}",
+                "Output Tokens": f"{rpt_out:,}",
+                "Cost": f"${rpt_tot:.6f}",
+            })
+
+        st.dataframe(
+            pd.DataFrame(report_rows),
+            use_container_width=True, hide_index=True,
+        )
+
+        # ── Cumulative Total ──────────────────────────────────────────
+        g_in_c, g_out_c, g_tot = _compute_cost(grand_in, grand_out)
+
+        st.divider()
+        st.subheader("Cumulative Total (All Runs)")
+        t1, t2, t3, t4 = st.columns(4)
+        t1.metric("Total Input Tokens", f"{grand_in:,}")
+        t2.metric("Total Output Tokens", f"{grand_out:,}")
+        t3.metric("Total Reports", len([r for r in report_rows if r["Cost"] != "—"]))
+        t4.metric("Total Estimated Cost", f"${g_tot:.6f}")
 
 # ── Run History tab ───────────────────────────────────────────────────────
 with tab_history:
