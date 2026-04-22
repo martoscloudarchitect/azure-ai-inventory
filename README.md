@@ -1,4 +1,4 @@
-# AI Inventory Architect
+# AzurePrism - Your AI Inventory Architect
 
 Azure infrastructure inventory and AI-powered documentation tool. Queries Azure Resource Graph, exports structured JSON and CSV reports, and optionally generates architecture documentation and Mermaid diagrams using Azure OpenAI — all driven by configurable prompt profiles.
 
