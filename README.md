@@ -659,7 +659,6 @@ Total execution time (seconds): 57.00
 ```
 
 The `inventory` key always contains the base resource list. Additional keys vary by profile (e.g. `recovery_vaults` and `sql_failover_groups` for `bcdr`, `security_assessments` and `nsg_rules` for `security`).
-```
 
 **inventory.csv** — Derived columns:
 
@@ -751,6 +750,12 @@ The `inventory` key always contains the base resource list. Additional keys vary
 ## Modular KQL Query Library
 
 The `modules/kql/` package provides a **profile-aware query system** that enriches the inventory data based on the selected use case. Instead of a single generic KQL query for all profiles, each use case runs the shared base query plus targeted supplementary queries.
+
+### Detailed KQL Technical Specification
+
+For the full technical deep-dive on KQL framework behavior, profile routing, per-query intent, limitations, scale considerations, and future expansion recommendations, see:
+
+- [modules/kql/KQL_Tech_Spec.md](./modules/kql/KQL_Tech_Spec.md)
 
 ### Architecture
 
