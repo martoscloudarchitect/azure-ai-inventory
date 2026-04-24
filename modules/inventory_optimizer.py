@@ -220,8 +220,8 @@ def sample_inventory(
         try:
             modified_dt = datetime.fromisoformat(modified.replace("Z", "+00:00"))
         except (ValueError, AttributeError):
-            modified_dt = datetime.min
-        return (-priority, -modified_dt.timestamp())  # Descending priority, most recent first
+            modified_dt = datetime(1970, 1, 1)
+        return (-priority, modified_dt)  # Descending priority, most recent first
     
     non_critical.sort(key=sort_key)
     
