@@ -208,7 +208,16 @@ def _render_sidebar_footer() -> None:
         "SME & C: West U.S. – Americas STU\n\n"
         "**Marcos Augusto Motta dos Santos**  \n"
         "Sr. Digital Solution Engineer  \n"
-        "SME & C: West U.S. – Azure"
+        "SME & C: West U.S. – Azure\n\n"
+        "**Sandro Carlos Pereira**  \n"
+        "Sr Digital Sol Engineer  \n"
+        "US SME&C_East-Azure\n\n"
+        "**Bruno Lopes**  \n"
+        "Digital Sol Engineer  \n"
+        "US SME&C_East-Azure\n\n"
+        "**Romulo Silva**  \n"
+        "Digital Sol Engineer  \n"
+        "US SME&C_East-Azure"
     )
 
 
