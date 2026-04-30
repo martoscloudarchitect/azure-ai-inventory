@@ -6,8 +6,57 @@ from pathlib import Path
 from modules.constants import REPORT_DISCLAIMER
 
 
+def _ensure_mermaid_fence(block: str) -> str:
+    """Ensure the Mermaid block has opening and closing code fences.
+    
+    Fallback wrapper for cases where the LLM returns bare diagram code without
+    the ```mermaid and ``` markers. This prevents silent diagram failures.
+    """
+    block = block.strip()
+    
+    # Check if already has opening fence
+    if block.startswith("```mermaid"):
+        return block
+    
+    # If block starts with a diagram type (flowchart, graph, stateDiagram, etc.),
+    # wrap it in fences
+    if re.match(r"^(flowchart|graph|stateDiagram|sequenceDiagram|classDiagram|erDiagram)", block):
+        return f"```mermaid\n{block}\n```"
+    
+    return block
+
+
+def _normalize_line_breaks_in_labels(block: str) -> str:
+    """Convert \\n inside label strings to <br> for cross-platform portability.
+    
+    Mermaid supports both \\n and <br> but <br> is more portable across 
+    different renderers and viewers outside the Streamlit app context.
+    """
+    # Replace \n with <br> inside double-quoted labels: ["...text\nmore..."]
+    def replace_in_label(match):
+        label = match.group(1)
+        label = label.replace("\\n", "<br>")
+        return f'["{label}"]'
+    
+    block = re.sub(r'\["(.*?)"\]', replace_in_label, block, flags=re.DOTALL)
+    return block
+
+
 def _normalize_mermaid(block: str) -> str:
-    """Quote Mermaid node and subgraph labels for VS Code Preview compatibility."""
+    """Fix common LLM-generated Mermaid syntax issues for portability and compatibility.
+    
+    This function:
+    1. Ensures the block has ```mermaid opening and closing fences (fallback wrapper)
+    2. Converts \\n in labels to <br> for cross-platform portability
+    3. Quotes node and subgraph labels for VS Code Preview compatibility
+    """
+    # Step 1: Ensure code fences are present (fallback for LLM omission)
+    block = _ensure_mermaid_fence(block)
+    
+    # Step 2: Normalize line breaks inside labels for portability
+    block = _normalize_line_breaks_in_labels(block)
+    
+    # Step 3: Original label quoting logic for VS Code
     # Subgraph labels: subgraph ID[label] → subgraph ID["label"]
     block = re.sub(
         r'(?m)^(\s*subgraph\s+[A-Za-z0-9_]+)\[(.+?)]\s*$',
