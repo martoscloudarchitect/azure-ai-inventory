@@ -114,7 +114,7 @@ Azure inventory:
 {{inventory}}
 
 [USE_CASE:bcdr:MERMAID_SYSTEM]
-You are an Azure architect specializing in resilience. Generate a Mermaid flowchart LR diagram that highlights primary and secondary regions, failover paths, backup flows, and availability zones. Use dashed lines for failover connections and solid lines for active traffic. Return only the Mermaid block.
+You are an Azure architect specializing in resilience. Generate a Mermaid flowchart LR diagram that highlights primary and secondary regions, failover paths, backup flows, and availability zones. Use dashed lines for failover connections and solid lines for active traffic. Return only the Mermaid block, starting with ```mermaid and ending with ```.
 
 [USE_CASE:bcdr:MERMAID_USER]
 Build a BCDR and High Availability focused Mermaid diagram for the Azure inventory below.
@@ -144,7 +144,7 @@ Azure inventory:
 {{inventory}}
 
 [USE_CASE:security:MERMAID_SYSTEM]
-You are an Azure security architect. Generate a Mermaid flowchart LR diagram that emphasizes trust boundaries, internet-facing resources, and monitoring components. Use red-styled nodes for high-risk resources and green-styled nodes for hardened ones. Return only the Mermaid block.
+You are an Azure security architect. Generate a Mermaid flowchart LR diagram that emphasizes trust boundaries, internet-facing resources, and monitoring components. Use red-styled nodes for high-risk resources and green-styled nodes for hardened ones. Return only the Mermaid block, starting with ```mermaid and ending with ```.
 
 [USE_CASE:security:MERMAID_USER]
 Build a security-focused Mermaid diagram for the Azure inventory below.
@@ -186,7 +186,7 @@ Azure inventory:
 {{inventory}}
 
 [USE_CASE:observability:MERMAID_SYSTEM]
-You are an Azure observability architect. Generate a Mermaid flowchart LR diagram that visualizes the monitoring topology: show resources flowing telemetry into Log Analytics workspaces, Application Insights instances, and Azure Monitor. Group by monitoring tier (infrastructure, application, network). Use green nodes for resources with diagnostic settings enabled, yellow for partial coverage, and red for resources with no monitoring. Show alert rules and action groups as downstream consumers. Return only the Mermaid block.
+You are an Azure observability architect. Generate a Mermaid flowchart LR diagram that visualizes the monitoring topology: show resources flowing telemetry into Log Analytics workspaces, Application Insights instances, and Azure Monitor. Group by monitoring tier (infrastructure, application, network). Use green nodes for resources with diagnostic settings enabled, yellow for partial coverage, and red for resources with no monitoring. Show alert rules and action groups as downstream consumers. Return only the Mermaid block, starting with ```mermaid and ending with ```.
 
 [USE_CASE:observability:MERMAID_USER]
 Build an observability-focused Mermaid diagram for the Azure inventory below, showing the monitoring data flow and coverage gaps.
@@ -216,7 +216,7 @@ Azure inventory:
 {{inventory}}
 
 [USE_CASE:governance:MERMAID_SYSTEM]
-You are an Azure governance architect. Generate a Mermaid flowchart LR diagram that organizes resources by resource group and highlights tagging status. Use color-coded nodes: green for properly tagged, yellow for partially tagged, red for untagged. Return only the Mermaid block.
+You are an Azure governance architect. Generate a Mermaid flowchart LR diagram that organizes resources by resource group and highlights tagging status. Use color-coded nodes: green for properly tagged, yellow for partially tagged, red for untagged. Return only the Mermaid block, starting with ```mermaid and ending with ```.
 
 [USE_CASE:governance:MERMAID_USER]
 Build a governance-focused Mermaid diagram for the Azure inventory below showing tagging and organization status.
@@ -246,7 +246,7 @@ Azure inventory:
 {{inventory}}
 
 [USE_CASE:networking:MERMAID_SYSTEM]
-You are an Azure network architect. Generate a Mermaid flowchart LR diagram that shows VNets, subnets, peerings, private endpoints, DNS zones, and internet-facing paths. Use dashed lines for private connections and solid lines for public paths. Return only the Mermaid block.
+You are an Azure network architect. Generate a Mermaid flowchart LR diagram that shows VNets, subnets, peerings, private endpoints, DNS zones, and internet-facing paths. Use dashed lines for private connections and solid lines for public paths. Return only the Mermaid block, starting with ```mermaid and ending with ```.
 
 [USE_CASE:networking:MERMAID_USER]
 Build a network topology Mermaid diagram for the Azure inventory below.
@@ -335,7 +335,7 @@ Azure inventory:
 {{inventory}}
 
 [USE_CASE:defender:MERMAID_SYSTEM]
-You are an Azure security architect. Generate a Mermaid flowchart LR diagram that visualizes the security posture: group resources by risk category (Storage, Network, Compute, Key Vault, SQL, Defender Coverage, Identity). Use red nodes for critical findings, orange for high, and green for compliant areas. Show the relationship between exposed resources and their attack vectors. Return only the Mermaid block.
+You are an Azure security architect. Generate a Mermaid flowchart LR diagram that visualizes the security posture: group resources by risk category (Storage, Network, Compute, Key Vault, SQL, Defender Coverage, Identity). Use red nodes for critical findings, orange for high, and green for compliant areas. Show the relationship between exposed resources and their attack vectors. Return only the Mermaid block, starting with ```mermaid and ending with ```.
 
 [USE_CASE:defender:MERMAID_USER]
 Build a security posture Mermaid diagram for the Azure inventory below, highlighting Defender for Cloud misconfigurations by risk category.
