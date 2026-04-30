@@ -118,6 +118,118 @@ def _sanitize_mermaid(code: str) -> str:
     return code
 
 
+# ── Initiative prioritization helpers ────────────────────────────────────
+
+PROFILE_COLORS: dict[str, str] = {
+    "security":      "#E74C3C",
+    "governance":    "#27AE60",
+    "bcdr":          "#E67E22",
+    "observability": "#3498DB",
+    "networking":    "#9B59B6",
+    "architecture":  "#1ABC9C",
+    "defender":      "#F39C12",
+}
+
+_HIGH_COMPLEXITY_KW = [
+    "private link", "private endpoint", "failover group", "geo-replication",
+    "zone-redundant", "vnet integration", "cross-region", "migration",
+    "restructure", "reorganize", "landing zone", "warm standby",
+]
+_LOW_COMPLEXITY_KW = [
+    "policy", "tagging", "tag ", "access review", "alert rule",
+    "diagnostic setting", "diagnostic settings", "enable", "disable",
+    "turn off", "runbook", "notification",
+]
+_HIGH_COST_KW = [
+    "private link", "private endpoint", "failover group", "geo-replication",
+    "zone-redundant", "vnet integration", "cross-region", "migration",
+    "warm standby", "landing zone",
+]
+_LOW_COST_KW = [
+    "policy", "tagging", "tag ", "alert rule", "diagnostic setting",
+    "diagnostic settings", "enable", "disable", "turn off",
+    "access review", "configure",
+]
+
+
+def _kw_score(text: str, high_kws: list[str], low_kws: list[str]) -> float:
+    t = text.lower()
+    if any(k in t for k in high_kws):
+        return 8.5
+    if any(k in t for k in low_kws):
+        return 1.5
+    return 5.0
+
+
+def get_latest_run_per_profile() -> dict[str, tuple[str, Path]]:
+    """Return {profile: (folder_name, path)} for the newest run of each profile.
+
+    Folder names follow the convention ``YYYY-MM-DD_HHMMSS_<profile>``.
+    When multiple runs exist for the same profile the one with the latest
+    timestamp (i.e. lexicographically greatest folder name) is chosen.
+    """
+    if not DATA_EXPORT_DIR.is_dir():
+        return {}
+    result: dict[str, tuple[str, Path]] = {}
+    for folder in sorted(DATA_EXPORT_DIR.iterdir(), reverse=True):
+        if not folder.is_dir():
+            continue
+        profile = folder.name.rsplit("_", 1)[-1]
+        if profile == "discovery":
+            continue
+        if profile not in result:
+            result[profile] = (folder.name, folder)
+    return result
+
+
+def extract_initiatives(run_dir: Path, profile: str) -> list[dict]:
+    """Parse the P1–P8 uplift table from a profile ``.md`` report.
+
+    Returns a list of dicts with keys: priority, remediation, uplift,
+    rationale, complexity (numeric 1.5/5.0/8.5), cost_label, profile.
+    Returns an empty list if the file or table are missing.
+    """
+    md_path = run_dir / f"{profile}.md"
+    if not md_path.is_file():
+        return []
+    text = md_path.read_text(encoding="utf-8")
+    start = text.find("### Prioritized Remediation Value Uplift")
+    if start == -1:
+        return []
+
+    items: list[dict] = []
+    in_rows = False
+    for line in text[start:].splitlines():
+        if not line.startswith("|"):
+            if in_rows:
+                break
+            continue
+        cols = [c.strip() for c in line.split("|")[1:-1]]
+        if len(cols) < 4:
+            continue
+        priority = cols[0]
+        if not re.match(r"P\d+$", priority):
+            continue  # header or separator row
+        remediation, uplift_str, rationale = cols[1], cols[2], cols[3]
+        uplift_m = re.search(r"\+?(\d+(?:\.\d+)?)", uplift_str)
+        if not uplift_m:
+            continue
+        in_rows = True
+        combined = f"{remediation} {rationale}"
+        complexity = _kw_score(combined, _HIGH_COMPLEXITY_KW, _LOW_COMPLEXITY_KW)
+        cost_num = _kw_score(combined, _HIGH_COST_KW, _LOW_COST_KW)
+        items.append({
+            "priority":    priority,
+            "remediation": remediation,
+            "uplift":      float(uplift_m.group(1)),
+            "rationale":   rationale,
+            "complexity":  complexity,
+            "cost_label":  {8.5: "High", 5.0: "Medium", 1.5: "Low"}[cost_num],
+            "profile":     profile,
+        })
+    return items
+
+
 def list_report_files(run_dir: Path) -> list[Path]:
     """Return .md report files excluding discovery.md."""
     return sorted(
