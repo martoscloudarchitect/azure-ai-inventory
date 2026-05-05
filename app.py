@@ -19,9 +19,11 @@ welcome   = st.Page("pages/welcome.py",     title="Welcome",   icon="👋", defa
 overview  = st.Page("pages/0_Overview.py",  title="Overview",  icon="📊")
 inventory = st.Page("pages/1_Inventory.py", title="Inventory", icon="📦")
 report    = st.Page("pages/2_Report.py",    title="Report",    icon="📄")
+topology  = st.Page("pages/4_Topology.py",  title="Topology",  icon="🔗")
 analytics = st.Page("pages/3_Insights.py",  title="Analytics",  icon="📈")
+query_specs = st.Page("pages/5_Query_Specs.py", title="Query_Specs", icon="📚")
 
-all_pages = [welcome, overview, inventory, report, analytics]
+all_pages = [welcome, overview, inventory, report, topology, analytics, query_specs]
 
 # ── Sidebar: assessment selection, page links, new assessment ─────────────
 run_dir = render_sidebar(all_pages)
