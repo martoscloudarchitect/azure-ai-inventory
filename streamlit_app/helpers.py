@@ -456,3 +456,90 @@ def display_sampling_statistics(run_dir: Path) -> None:
     col1.metric("Original Resources", info.get("original_count", "—"))
     col2.metric("Sampled Resources", info.get("sampled_count", "—"))
     col3.metric("Reduction", f"{info.get('reduction_percentage', 0):.1f}%")
+
+
+# ── Topology Graph Helpers ───────────────────────────────────────────────
+
+
+def load_inventory_json(run_dir: Path) -> "pd.DataFrame":
+    """Load inventory from JSON and convert to DataFrame.
+    
+    Args:
+        run_dir: Path to run directory (contains inventory.json)
+    
+    Returns:
+        Pandas DataFrame with columns: id, name, type, service_category, etc.
+    
+    Raises:
+        FileNotFoundError: If inventory.json not found
+        ValueError: If inventory is empty
+    """
+    import pandas as pd
+    
+    json_path = run_dir / "inventory.json"
+    if not json_path.is_file():
+        raise FileNotFoundError(f"inventory.json not found in {run_dir}")
+    
+    inv_data = load_json(json_path)
+    if not inv_data or not isinstance(inv_data, dict):
+        raise ValueError(f"inventory.json is not a valid JSON object in {run_dir}")
+    
+    # Extract inventory list
+    inventory_list = inv_data.get("inventory", [])
+    if not inventory_list:
+        raise ValueError(f"inventory.json has no 'inventory' key or is empty")
+    
+    # Flatten nested structure into DataFrame
+    # Extract key fields from each resource
+    rows = []
+    for resource in inventory_list:
+        # Extract service category from type (e.g., "microsoft.cognitiveservices/accounts" -> "CognitiveServices")
+        resource_type = resource.get("type", "").lower()
+        if "/" in resource_type:
+            service_part = resource_type.split("/")[0].replace("microsoft.", "").replace("azure.", "")
+            service_category = service_part.title().replace(".", " ")
+        else:
+            service_category = resource.get("service_category", "Unknown")
+        
+        row = {
+            "id": resource.get("id", ""),
+            "name": resource.get("name", ""),
+            "type": resource.get("type", ""),
+            "service_category": service_category,
+            "service_short_type": resource.get("service_short_type", service_category),
+            "is_child_resource": resource.get("is_child_resource", False),
+            "location": resource.get("location", ""),
+            "resource_group": resource.get("resourceGroup", ""),
+            "subscription_id": resource.get("subscriptionId", ""),
+            "provisioning_state": resource.get("provisioningState", "Unknown"),
+            "kind": resource.get("kind", ""),
+            "sku_name": resource.get("sku", {}).get("name", "") if isinstance(resource.get("sku"), dict) else "",
+            "iac_hint": resource.get("iac_hint", "unknown"),
+        }
+        rows.append(row)
+    
+    df = pd.DataFrame(rows)
+    if df.empty:
+        raise ValueError(f"inventory.json produced empty DataFrame")
+    
+    return df
+
+
+@st.cache_data(ttl=3600)
+def load_graph_cached(run_dir_name: str) -> tuple:
+    """Cache graph loading by run name (Streamlit-managed cache).
+    
+    Args:
+        run_dir_name: Name of run folder (e.g., '2026-04-30_100228_security')
+    
+    Returns:
+        (graph, inventory_df, profile) tuple
+    """
+    from modules.network_graph import build_base_graph
+    
+    run_dir = run_path(run_dir_name)
+    inventory_df = load_inventory_json(run_dir)
+    graph = build_base_graph(inventory_df)
+    profile = detect_profile(run_dir)
+    
+    return graph, inventory_df, profile
